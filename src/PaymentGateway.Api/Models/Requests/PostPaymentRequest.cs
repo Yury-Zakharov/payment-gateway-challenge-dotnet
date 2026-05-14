@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+using PaymentGateway.Api.Enums;
+
 namespace PaymentGateway.Api.Models.Requests;
 
 public record  PostPaymentRequest : IValidatableObject

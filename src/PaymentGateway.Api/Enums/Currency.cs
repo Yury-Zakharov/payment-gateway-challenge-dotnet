@@ -3,12 +3,12 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace PaymentGateway.Api.Models;
+namespace PaymentGateway.Api.Enums;
 
 // In real system I would think of single source of currency codes across all services.
 
 /// <summary>
-/// Supported ISO 4217 currency codes (limited to 3 per requirements).
+/// Supported ISO 4217 currency codes.
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<Currency>))]
 public enum Currency

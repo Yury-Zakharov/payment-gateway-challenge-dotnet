@@ -1,4 +1,8 @@
+using System.Net;
+
+using PaymentGateway.Api.Clients;
 using PaymentGateway.Api.Filters;
+using PaymentGateway.Api.Models.Configuration;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Api.Services;
@@ -7,7 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<PaymentsRepository>();
+builder.Services.Configure<BankClientOptions>(
+    builder.Configuration.GetSection("BankClient"));
+
+builder.Services.AddHttpClient<IBankClient, BankClient>();
+
+builder.Services.AddSingleton<IPaymentsRepository, InMemoryPaymentRepository>();
 builder.Services.AddScoped<IPaymentsResource, PaymentsResource>();
 
 var app = builder.Build();
@@ -21,18 +30,20 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/payments/{id:guid}", async (Guid id, IPaymentsResource resource) =>
-{
-    var result = await resource.GetAsync(id);
-    return result is null
-        ? Results.NotFound()
-        : Results.Ok(result);
-});
-
-
-app.MapPost("/payments", async (PostPaymentRequest request, IPaymentsResource resource) =>
+app.MapGet("/payments/{id:guid}", async (Guid id, IPaymentsResource resource, CancellationToken ct) =>
     {
-        var result = await resource.ProcessPaymentAsync(request);
+        var result = await resource.GetAsync(id, ct);
+        return result is null
+            ? Results.NotFound()
+            : Results.Ok(result);
+    })
+    .Produces<GetPaymentResponse>()
+    .Produces((int)HttpStatusCode.NotFound);
+   
+
+app.MapPost("/payments", async (PostPaymentRequest request, IPaymentsResource resource, CancellationToken ct) =>
+    {
+        var result = await resource.ProcessPaymentAsync(request, ct);
         
         return result switch
         {
@@ -43,8 +54,14 @@ app.MapPost("/payments", async (PostPaymentRequest request, IPaymentsResource re
             _ => Results.Problem("Unknown result", statusCode: 500)
         };
     })
+    .Produces<PostPaymentResponse>()
+    .ProducesProblem((int)HttpStatusCode.InternalServerError)
+    .ProducesProblem((int)HttpStatusCode.ServiceUnavailable)
     .AddEndpointFilter<ValidationFilter>();   
 
 app.Run();
 
+// For testcontainers compatibility.
+// ReSharper disable once ClassNeverInstantiated.Global
+public partial class Program { }
 

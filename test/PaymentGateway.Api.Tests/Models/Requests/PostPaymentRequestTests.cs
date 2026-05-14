@@ -1,3 +1,4 @@
+using PaymentGateway.Api.Enums;
 using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Validation;

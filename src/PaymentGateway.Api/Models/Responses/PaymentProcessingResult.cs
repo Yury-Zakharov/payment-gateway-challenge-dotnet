@@ -1,22 +1,22 @@
 namespace PaymentGateway.Api.Models.Responses;
 
+// Poor man's Discriminated union.
 public abstract record PaymentProcessingResult
 {
     private PaymentProcessingResult() { }
 
     /// <summary>
-    /// Bank authorized (odd last digit). Store + return 201.
+    /// Bank authorized payment.
     /// </summary>
-    public sealed record Authorized(Payment Payment) : PaymentProcessingResult;
+    public sealed record Authorized(PostPaymentResponse Response) : PaymentProcessingResult;
 
     /// <summary>
-    /// Bank declined (even last digit). Store + return 201.
+    /// Bank declined payment.
     /// </summary>
-    public sealed record Declined(Payment Payment) : PaymentProcessingResult;
+    public sealed record Declined(PostPaymentResponse Response) : PaymentProcessingResult;
 
     /// <summary>
-    /// Bank returned 503 (card ends with 0) or network error.
-    /// Do NOT store. Return 503.
+    /// Bank returned 503 or network error.
     /// </summary>
     public sealed record BankError(string Message) : PaymentProcessingResult;
 }
