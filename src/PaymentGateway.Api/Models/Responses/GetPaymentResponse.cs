@@ -1,12 +1,14 @@
-﻿namespace PaymentGateway.Api.Models.Responses;
+﻿using PaymentGateway.Api.Enums;
 
-public class GetPaymentResponse
+namespace PaymentGateway.Api.Models.Responses;
+
+public readonly record struct GetPaymentResponse
 {
-    public Guid Id { get; set; }
-    public PaymentStatus Status { get; set; }
-    public int CardNumberLastFour { get; set; }
-    public int ExpiryMonth { get; set; }
-    public int ExpiryYear { get; set; }
-    public string Currency { get; set; }
-    public int Amount { get; set; }
+    public Guid Id { get; init; }
+    public PaymentStatus Status { get; init; }
+    public string LastFourCardDigits { get; init; }
+    public int ExpiryMonth { get; init; }
+    public int ExpiryYear { get; init; }
+    public Currency Currency { get; init; }
+    public long Amount { get; init; }
 }
