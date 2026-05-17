@@ -6,7 +6,7 @@ using PaymentGateway.Api.Models.Responses;
 
 namespace PaymentGateway.Api.Services;
 
-public sealed class PaymentsResource(IPaymentsRepository paymentsRepository, IBankClient bankClient) : IPaymentsResource
+public sealed class PaymentsResource(IPaymentsRepository paymentsRepository, IBankClient bankClient, ILogger<PaymentsResource> logger) : IPaymentsResource
 {
     async Task<GetPaymentResponse?> IPaymentsResource.GetAsync(Guid id, CancellationToken ct)
     {
@@ -49,6 +49,8 @@ public sealed class PaymentsResource(IPaymentsRepository paymentsRepository, IBa
         
         await paymentsRepository.AddAsync(payment, ct);
         PostPaymentResponse response = BankPaymentRequestMapper.ToBankResponse(payment);
+        
+        logger.LogInformation("Payment processed {Status} {Id}", payment.Status, payment.Id);
         
         return bankResponse.Authorized
             ? new PaymentProcessingResult.Authorized(response)

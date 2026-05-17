@@ -1,0 +1,10 @@
+GET {{baseUrl}}/health
+Accept: application/json
+Content-Type: application/json
+
+###
+
+GET {{baseUrl}}/metrics
+Accept: application/json
+Content-Type: application/json
+###

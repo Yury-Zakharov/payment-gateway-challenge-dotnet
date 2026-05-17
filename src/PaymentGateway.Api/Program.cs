@@ -2,9 +2,11 @@ using System.Net;
 
 using PaymentGateway.Api.Clients;
 using PaymentGateway.Api.Filters;
+using PaymentGateway.Api.HealthChecks;
 using PaymentGateway.Api.Models.Configuration;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Api.Models.Responses;
+using PaymentGateway.Api.Observability;
 using PaymentGateway.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +21,14 @@ builder.Services.AddHttpClient<IBankClient, BankClient>();
 builder.Services.AddSingleton<IPaymentsRepository, InMemoryPaymentRepository>();
 builder.Services.AddScoped<IPaymentsResource, PaymentsResource>();
 
+builder.Services.AddHealthChecks()
+    .AddCheck<RepositoryHealthCheck>("repository")
+    .AddCheck<BankClientHealthCheck>("bank");
+
+builder.Services.AddObservability();
+
 var app = builder.Build();
+app.UseExceptionHandler("/error");
 
 if (app.Environment.IsDevelopment())
 {
@@ -29,6 +38,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapHealthChecks("/health");
 
 app.MapGet("/payments/{id:guid}", async (Guid id, IPaymentsResource resource, CancellationToken ct) =>
     {
@@ -59,6 +69,7 @@ app.MapPost("/payments", async (PostPaymentRequest request, IPaymentsResource re
     .ProducesProblem((int)HttpStatusCode.ServiceUnavailable)
     .AddEndpointFilter<ValidationFilter>();   
 
+app.MapPrometheusScrapingEndpoint("/metrics");
 app.Run();
 
 // For testcontainers compatibility.
